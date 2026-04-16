@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Seite nicht gefunden</title>
+  <meta http-equiv="refresh" content="0; url=./index.html">
+  <script>
+    (function() {
+      var target = './index.html';
+      if (location.pathname.endsWith('/')) target = location.pathname + 'index.html';
+      location.replace(target);
+    })();
+  </script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; color: #111; }
+  </style>
+</head>
+<body>
+  <p>Weiterleitung zur Startseite…</p>
+  <p><a href="./index.html">Falls nichts passiert, hier klicken.</a></p>
+</body>
+</html>
