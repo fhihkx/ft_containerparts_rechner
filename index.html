@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Finanzierungsrechner – FT Containerparts</title>
+  <meta name="description" content="Finanzierungsrechner für FT Containerparts.">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob:; font-src 'self' data:; frame-ancestors 'self';">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    integrity="sha512-J4oAkTR7H1YJIU4TZJmhCBrJ7mW9G6oENUjLRa8BUNKAbpvTMYFCwpTdecR6KPl8Sy2XuF4cGVVbFKUCwnPw=="
+    crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --ft-yellow: #ffda6c;
+      --ft-mid: #3a3a3a;
+      --ft-dark: #2d2d2d;
+      --ft-border: #e2e8f0;
+      --ft-bg: #f7f8fa;
+      --ft-text: #1f2937;
+    }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #fbfbfc 0%, #f1f3f5 100%);
+      color: var(--ft-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .page-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 16px 36px;
+    }
+
+    .header-shell {
+      background: #fff;
+      border: 1px solid #edf1f4;
+      border-radius: 14px;
+      box-shadow: 0 18px 45px -28px rgba(0, 0, 0, 0.24);
+    }
+
+    .tab-nav {
+      background: #fff;
+      border: 1px solid var(--ft-border);
+      border-radius: 12px;
+      box-shadow: 0 12px 24px -16px rgba(45, 45, 45, 0.24);
+      padding: 7px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .tab-btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 10px;
+      background: transparent;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      transition: .2s ease;
+    }
+
+    .tab-btn:hover { color: var(--ft-dark); background: #f6f7f9; }
+
+    .tab-btn.bg-ft-yellow {
+      background: var(--ft-dark);
+      color: var(--ft-yellow);
+      box-shadow: 0 10px 20px -14px rgba(0, 0, 0, 0.85);
+      transform: translateY(-1px);
+    }
+
+    .app-card {
+      background: #fff;
+      border: 1px solid #e9edf0;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.22);
+    }
+
+    .calc-pane { padding: 24px; }
+
+    .calc-label {
+      display: block;
+      margin-bottom: 6px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .calc-input {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid var(--ft-border);
+      background: transparent;
+      color: #111827;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 10px 0;
+      outline: none;
+      line-height: 1.35;
+      border-radius: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .calc-input:focus {
+      border-bottom-color: var(--ft-dark);
+      box-shadow: inset 0 -1px 0 var(--ft-dark);
+    }
+
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .cta-btn {
+      border: 1px solid #e7be43;
+      background: var(--ft-yellow);
+      color: var(--ft-dark);
+      border-radius: 11px;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      padding: 13px 14px;
+      transition: .2s ease;
+    }
+
+    .cta-btn:hover { filter: brightness(.97); transform: translateY(-1px); }
+    .cta-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .ghost-btn {
+      border: 1px solid #d0d7de;
+      background: #fff;
+      color: var(--ft-dark);
+      border-radius: 11px;
+      font-weight: 700;
+      padding: 13px 14px;
+    }
+
+    .dark-result {
+      background: var(--ft-mid);
+      color: var(--ft-yellow);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 320px;
+    }
+
+    #result-display {
+      font-size: 52px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--ft-yellow);
+      letter-spacing: -.02em;
+      word-break: break-word;
+    }
+
+    #result-display .ch {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(7px);
+      animation: rise .24s ease forwards;
+    }
+
+    @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+    .err-box {
+      border: 1px solid #fecaca;
+      background: #fff1f2;
+      color: #991b1b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .14);
+      color: #f5f5f5;
+      font-size: 14px;
+    }
+
+    .summary-row .v {
+      font-weight: 800;
+      color: var(--ft-yellow);
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .hidden { display: none !important; }
+
+    .footer-line {
+      height: 1px;
+      background: var(--ft-dark);
+      width: 100%;
+    }
+
+    .footer-block {
+      background: var(--ft-mid);
+      color: #d4d4d4;
+    }
+
+    .footer-link {
+      color: #f0f0f0;
+      font-weight: 700;
+      font-size: 12px;
+      transition: color .2s ease;
+    }
+
+    .footer-link:hover { color: var(--ft-yellow); }
+
+    @media (min-width: 992px) {
+      .calc-pane { padding: 34px; }
+      .dark-result { padding: 34px; }
+    }
+
+    @media (max-width: 900px) {
+      .tab-nav { grid-template-columns: 1fr; }
+      #result-display { font-size: 44px; }
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+  <noscript>
+    <div class="max-w-3xl mx-auto p-4">
+      <div class="err-box">Dieser Rechner benötigt JavaScript, um korrekt zu funktionieren.</div>
+    </div>
+  </noscript>
+
+  <div class="page-wrap w-full">
+    <header class="header-shell px-4 py-4 md:px-6 md:py-5 mb-6">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-black tracking-tight text-gray-900">Finanzierungsrechner</h1>
+          <p class="text-sm text-gray-500 mt-1">FT Containerparts GmbH &amp; CO. KG</p>
+        </div>
+        <img src="assets/logo.png" alt="FT Containerparts" class="h-10 md:h-12 w-auto object-contain">
+      </div>
+    </header>
+
+    <main class="w-full">
+      <div class="mb-6 md:mb-8">
+        <div class="tab-nav">
+          <button id="tab-calc" type="button" class="tab-btn bg-ft-yellow text-ft-dark" onclick="UI.showTab('calc')">Rechner</button>
+          <button id="tab-why" type="button" class="tab-btn text-gray-500" onclick="UI.showTab('why')">Vorteile</button>
+          <button id="tab-cmp" type="button" class="tab-btn text-gray-500" onclick="UI.showTab('cmp')">Leasing vs. Mietkauf</button>
+        </div>
+      </div>
+
+      <section id="view-calc" class="app-card view-content">
+        <div id="step1" class="grid grid-cols-1 lg:grid-cols-12">
+          <div class="lg:col-span-7 calc-pane">
+            <h2 class="text-2xl md:text-3xl font-black tracking-tight text-gray-900 mb-6">Finanzierung berechnen</h2>
+
+            <input id="objekt" type="text" class="hidden" aria-hidden="true" tabindex="-1" autocomplete="off">
+
+            <div class="space-y-7">
+              <div>
+                <label for="price" class="calc-label">Anschaffungspreis (Netto) *</label>
+                <input id="price" class="calc-input" type="text" inputmode="decimal" placeholder="z. B. 35.000,00" oninput="UI.onPriceInput(this)" onblur="UI.onPriceBlur(this)" autocomplete="off">
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label for="dur" class="calc-label">Laufzeit *</label>
+                  <select id="dur" class="calc-input cursor-pointer" onchange="UI.onDurationChange()">
+                    <option value="" selected>Bitte wählen</option>
+                    <option value="36">36 Monate</option>
+                    <option value="48">48 Monate</option>
+                    <option value="54">54 Monate</option>
+                    <option value="60">60 Monate</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="res" class="calc-label">Restwert *</label>
+                  <select id="res" class="calc-input cursor-pointer" onchange="UI.onResidualChange()">
+                    <option value="" selected>Bitte wählen</option>
+                    <option value="5">5 %</option>
+                    <option value="10">10 %</option>
+                    <option value="15">15 %</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="err1" class="err-box hidden mt-5">
+              <ul id="err1-list" class="list-disc ml-5"></ul>
+            </div>
+
+            <div class="mt-7 flex flex-wrap gap-3">
+              <button type="button" class="cta-btn" onclick="UI.calculate()">Rate berechnen</button>
+              <button id="next-btn" type="button" class="ghost-btn" onclick="UI.goStep2()" disabled>Weiter</button>
+            </div>
+          </div>
+
+          <aside class="lg:col-span-5 dark-result">
+            <div>
+              <span class="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-black bg-opacity-20 text-yellow-100">Unverbindliches Angebot</span>
+              <p id="start-hint" class="text-sm mt-6 text-yellow-100">Bitte Eingaben vervollständigen und berechnen.</p>
+              <div id="result-area" class="hidden mt-4">
+                <div class="text-xs font-extrabold tracking-widest uppercase text-yellow-100">Monatliche Rate</div>
+                <div class="mt-2 flex items-end gap-2">
+                  <div id="result-display">0,00</div>
+                  <div class="text-3xl font-semibold leading-none text-yellow-100">€</div>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-xs leading-relaxed text-yellow-100 mt-8">
+              *Alle Preise netto zzgl. gesetzlicher MwSt. Unverbindlich, vorbehaltlich positiver Bonitätsprüfung.
+            </p>
+          </aside>
+        </div>
+
+        <div id="step2" class="hidden grid grid-cols-1 lg:grid-cols-12">
+          <div class="lg:col-span-7 calc-pane">
+            <h2 class="text-2xl md:text-3xl font-black tracking-tight text-gray-900 mb-2">Kontaktdaten</h2>
+            <p class="text-sm text-gray-500 mb-6">Bitte Daten eingeben, Angebot prüfen und als PDF herunterladen.</p>
+
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="calc-label" for="f-art">Finanzierungsart *</label>
+                  <select id="f-art" class="calc-input">
+                    <option value="" selected>Bitte wählen</option>
+                    <option value="Leasing">Leasing</option>
+                    <option value="Mietkauf">Mietkauf</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="calc-label" for="f-anr">Anrede *</label>
+                  <select id="f-anr" class="calc-input">
+                    <option value="" selected>Bitte wählen</option>
+                    <option value="Frau">Frau</option>
+                    <option value="Herr">Herr</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="calc-label" for="objekt-visible">Objekt / Produktbezeichnung *</label>
+                <input id="objekt-visible" class="calc-input" type="text" placeholder="z. B. Werkstattcontainer" maxlength="120" autocomplete="off" oninput="document.getElementById('objekt').value=this.value; var so=document.getElementById('s-obj'); if(so){ so.textContent=this.value.trim()||'—'; }">
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label class="calc-label" for="f-vn">Vorname *</label><input id="f-vn" class="calc-input" type="text" maxlength="80" autocomplete="off"></div>
+                <div><label class="calc-label" for="f-nn">Nachname *</label><input id="f-nn" class="calc-input" type="text" maxlength="80" autocomplete="off"></div>
+              </div>
+
+              <div><label class="calc-label" for="f-fi">Firmenname *</label><input id="f-fi" class="calc-input" type="text" maxlength="120" autocomplete="off"></div>
+              <div><label class="calc-label" for="f-st">Straße *</label><input id="f-st" class="calc-input" type="text" maxlength="120" autocomplete="off"></div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div><label class="calc-label" for="f-plz">PLZ *</label><input id="f-plz" class="calc-input" type="text" inputmode="numeric" maxlength="10" autocomplete="off"></div>
+                <div class="md:col-span-2"><label class="calc-label" for="f-ort">Ort *</label><input id="f-ort" class="calc-input" type="text" maxlength="80" autocomplete="off"></div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div><label class="calc-label" for="f-vorgangs">Vorgangs-ID</label><input id="f-vorgangs" class="calc-input" type="text" maxlength="60" autocomplete="off"></div>
+                <div><label class="calc-label" for="f-bearbeiter">Bearbeiter</label><input id="f-bearbeiter" class="calc-input" type="text" maxlength="80" autocomplete="off"></div>
+              </div>
+            </div>
+
+            <input type="text" name="_hp" class="hidden" tabindex="-1" autocomplete="off">
+
+            <div id="err2" class="err-box hidden mt-5">
+              <ul id="err2-list" class="list-disc ml-5"></ul>
+            </div>
+
+            <p id="rl-msg" class="hidden text-sm text-amber-700 mt-5">Bitte kurz warten, bevor Sie erneut ein PDF erzeugen.</p>
+
+            <div class="mt-7 flex flex-wrap gap-3">
+              <button type="button" class="ghost-btn" onclick="UI.goStep1()">Zurück</button>
+              <button id="sub-btn" type="button" class="cta-btn" onclick="UI.submitForm()">Angebot als PDF erstellen</button>
+            </div>
+          </div>
+
+          <aside class="lg:col-span-5 dark-result">
+            <h3 class="text-2xl font-black tracking-tight text-yellow-100">Zusammenfassung</h3>
+
+            <div class="mt-6">
+              <div class="summary-row"><span>Anschaffungspreis</span><span id="s-preis" class="v">—</span></div>
+              <div class="summary-row"><span>Laufzeit</span><span id="s-dur" class="v">—</span></div>
+              <div class="summary-row"><span>Restwert</span><span id="s-res" class="v">—</span></div>
+              <div class="summary-row"><span>Leasingfaktor</span><span id="s-fac" class="v">—</span></div>
+              <div class="summary-row"><span>Objekt</span><span id="s-obj" class="v">—</span></div>
+              <div class="summary-row border-0"><span>Monatliche Rate</span><span id="s-rate" class="v">—</span></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="view-why" class="app-card p-6 md:p-10 hidden view-content mt-0">
+        <h2 class="text-3xl font-black tracking-tight text-gray-900">Vorteile mit FT Containerparts</h2>
+        <p class="text-gray-600 mt-3 max-w-3xl">Transparente Konditionen, schnelle Bearbeitung und feste Monatsraten für planbare Investitionen.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-7">
+          <div class="border border-gray-200 rounded-xl p-5 bg-gray-50"><h3 class="font-black text-lg text-gray-900">Liquidität sichern</h3><p class="text-sm text-gray-600 mt-2">Kapital bleibt im Unternehmen, statt vollständig gebunden zu werden.</p></div>
+          <div class="border border-gray-200 rounded-xl p-5 bg-gray-50"><h3 class="font-black text-lg text-gray-900">Fixe Planung</h3><p class="text-sm text-gray-600 mt-2">Feste Raten erleichtern Forecasts und Investitionsplanung.</p></div>
+          <div class="border border-gray-200 rounded-xl p-5 bg-gray-50"><h3 class="font-black text-lg text-gray-900">Schnelle Abwicklung</h3><p class="text-sm text-gray-600 mt-2">Anfrage bis Angebots-PDF in einem durchgängigen Prozess.</p></div>
+        </div>
+      </section>
+
+      <section id="view-cmp" class="app-card p-6 md:p-10 hidden view-content mt-0">
+        <h2 class="text-3xl font-black tracking-tight text-gray-900">Leasing vs. Mietkauf</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-7">
+          <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
+            <h3 class="font-black text-xl text-gray-900">Leasing</h3>
+            <ul class="list-disc ml-5 mt-3 text-sm text-gray-600 space-y-1">
+              <li>Schonung der Liquidität durch laufende Raten.</li>
+              <li>Planbare monatliche Kosten.</li>
+              <li>Flexible Investitionssteuerung.</li>
+            </ul>
+          </div>
+          <div class="border border-gray-200 rounded-xl p-5 bg-gray-50">
+            <h3 class="font-black text-xl text-gray-900">Mietkauf</h3>
+            <ul class="list-disc ml-5 mt-3 text-sm text-gray-600 space-y-1">
+              <li>Eigentumsübergang nach Laufzeitende.</li>
+              <li>Klarer Kostenrahmen über die Vertragslaufzeit.</li>
+              <li>Hinweis: MwSt.-Regelung gemäß Vertragsmodell beachten.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="mt-auto">
+    <div class="footer-line"></div>
+    <div class="footer-block">
+      <div class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        <div class="text-center md:text-left">
+          <p class="text-sm font-bold tracking-wide text-yellow-200">FT CONTAINERPARTS</p>
+          <p class="text-xs mt-2 text-gray-300">Werkzeuge · Industriebedarf · Arbeitsschutz</p>
+        </div>
+        <div class="text-center text-xs text-gray-300">© 2026 FT-Containerparts GmbH &amp; CO. KG · Böcklerallee 9–13 · 27721 Ritterhude</div>
+        <div class="flex justify-center md:justify-end gap-6">
+          <a class="footer-link" href="https://www.ft-containerparts.de/impressum/" target="_blank" rel="noopener noreferrer">Impressum</a>
+          <a class="footer-link" href="https://www.ft-containerparts.de/datenschutzerklaerung/" target="_blank" rel="noopener noreferrer">Datenschutz</a>
+          <a class="footer-link" href="https://www.ft-containerparts.de/kontakt/" target="_blank" rel="noopener noreferrer">Kontakt</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script defer src="config.js"></script>
+  <script defer src="calculator.js"></script>
+  <script defer src="pdf.js"></script>
+  <script defer src="ui.js"></script>
+  <script defer>
+    window.addEventListener('DOMContentLoaded', function () {
+      if (window.UI && typeof UI.onDurationChange === 'function') UI.onDurationChange();
+      if (window.UI && typeof UI.showTab === 'function') UI.showTab('calc');
+
+      var mirror = document.getElementById('objekt-visible');
+      var hiddenObj = document.getElementById('objekt');
+      if (mirror && hiddenObj && hiddenObj.value) mirror.value = hiddenObj.value;
+    });
+  </script>
+</body>
+</html>
